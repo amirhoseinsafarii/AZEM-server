@@ -39,6 +39,7 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     "rest_framework",
     "rest_framework.authtoken",
+    "rest_framework_simplejwt.token_blacklist",
     # local
     "account",
 ]
@@ -93,9 +94,12 @@ AUTH_USER_MODEL = "account.CustomUser"
 
 REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": [
-        "rest_framework.authentication.TokenAuthentication",
+        "rest_framework_simplejwt.authentication.JWTAuthentication",
     ],
     # Other settings...
+}
+SIMPLE_JWT = {
+    "USER_ID_FIELD": "pk",
 }
 
 AUTH_PASSWORD_VALIDATORS = [

@@ -1,65 +1,65 @@
 from django.shortcuts import render
 from rest_framework import status
 from rest_framework.response import Response
-from rest_framework.decorators import api_view
+from rest_framework.permissions import IsAuthenticated
+
+# from rest_framework.decorators import api_view
+from rest_framework.views import APIView
 from .serializers import UserSerializer
 from rest_framework.authtoken.models import Token
 
 from .models import CustomUser
 from django.core.exceptions import ObjectDoesNotExist
 
+from django.http import JsonResponse
+from rest_framework_simplejwt.tokens import RefreshToken
+
+from django.contrib.auth import authenticate
+
 # Create your views here.
 
 
-@api_view(["POST"])
-def register_user(request):
-    if request.method == "POST":
-        serializer = UserSerializer(data=request.data)
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+class userRegister(APIView):
+    def post(self, request):
+
+        ser_data = UserSerializer(data=request.data)
+
+        if ser_data.is_valid():
+            ser_data.create(ser_data.validated_data)
+            return Response(status=status.HTTP_201_CREATED)
+        return Response(ser_data.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
-@api_view(["POST"])
-def user_login(request):
-    if request.method == "POST":
-        phonNumber = request.data.get("phonNumber")
+class userLogin(APIView):
+    def post(self, request):
+        phoneNumber = request.data.get("phoneNumber")
         password = request.data.get("password")
-        print(phonNumber)
-        print(password)
-
         user = None
-        if phonNumber:
-            try:
-                print(user, "user first")
-                user = CustomUser.objects.get(phonNumber=phonNumber, password=password)
+        if phoneNumber and password:
+            user = CustomUser.objects.get(phoneNumber=phoneNumber, password=password)
+            refresh = RefreshToken.for_user(user)
 
-            except ObjectDoesNotExist:
-                pass
-
-        if user:
-            print(user, "user>>>>>>>")
-            token, _ = Token.objects.get_or_create(user=user)
-            print(token)
-            return Response({"token": token.key}, status=status.HTTP_200_OK)
-
-        return Response(
-            {"error": "Invalid credentials"}, status=status.HTTP_401_UNAUTHORIZED
-        )
+            return Response(
+                {"refresh": str(refresh), "access": str(refresh.access_token)},
+                status=status.HTTP_201_CREATED,
+            )
+        else:
+            return Response(
+                {"error": "user not found"}, status=status.HTTP_400_BAD_REQUEST
+            )
 
 
-@api_view(["POST"])
-def user_logout(request):
-    if request.method == "POST":
-        phonNumber = request.data.get("phonNumber")
+class userLogout(APIView):
+    permission_classes = (IsAuthenticated,)
+
+    def post(self, request):
         try:
-            user = CustomUser.objects.get(phonNumber=phonNumber)
-            user.auth_token.delete()
-            return Response(
-                {"message": "Successfully logged out."}, status=status.HTTP_200_OK
-            )
+            refresh_token = request.data["refresh_token"]
+            print(refresh_token)
+            token = RefreshToken(refresh_token)
+            print(token)
+            token.blacklist()
+
+            return Response(status=status.HTTP_205_RESET_CONTENT)
         except Exception as e:
-            return Response(
-                {"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR
-            )
+            return Response({"e": f"{e}"}, status=status.HTTP_400_BAD_REQUEST)
