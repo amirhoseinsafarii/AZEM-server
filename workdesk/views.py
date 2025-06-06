@@ -14,6 +14,7 @@ from rest_framework.permissions import IsAuthenticated
 class WorkDeskRegister(APIView):
 
     permission_classes = (IsAuthenticated,)
+    serializer_class = WorkDeskSerializer  # swagger
 
     def post(self, request):
         print(request.user.id)
