@@ -13,6 +13,9 @@ class WorkDesk(models.Model):
         CustomUser, through="WorkDeskMembership", related_name="workdeskCollaborator"
     )
 
+    def __str__(self):
+        return str(self.id)
+
 
 class WorkDeskMembership(models.Model):
     ROLES = (
