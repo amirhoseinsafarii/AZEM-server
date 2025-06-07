@@ -45,6 +45,7 @@ INSTALLED_APPS = [
     "account",
     "workdesk",
     "project",
+    "task",
 ]
 
 MIDDLEWARE = [

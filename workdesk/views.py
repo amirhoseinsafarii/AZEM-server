@@ -57,6 +57,7 @@ class AddWorkDeskMemberPermissions(IsAuthenticated):
 class AddWorkDeskMember(APIView):
 
     permission_classes = (AddWorkDeskMemberPermissions,)
+    serializer_class = WorkDeskMembershipSerializer
 
     def post(self, request, pk):
         workdesk = WorkDesk.objects.get(id=pk)
